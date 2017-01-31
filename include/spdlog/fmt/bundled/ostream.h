@@ -13,6 +13,7 @@ For the license information refer to format.h.
 // commented out by spdlog
 // #include "format.h"
 #include <ostream>
+#include <mutex>
 
 namespace fmt
 {
@@ -91,7 +92,11 @@ void format_arg(BasicFormatter<Char, ArgFormatter> &f,
 
     internal::FormatBuf<Char> format_buf(buffer);
     std::basic_ostream<Char> output(&format_buf);
-    output << value;
+    {
+        static std::mutex format_mutex;
+        std::lock_guard<std::mutex> format_lk(format_mutex);
+        output << value;
+    }
 
     BasicStringRef<Char> str(&buffer[0], format_buf.size());
     typedef internal::MakeArg< BasicFormatter<Char> > MakeArg;
